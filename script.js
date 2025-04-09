@@ -1,323 +1,585 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Navigation Toggle
-    const createMobileNav = () => {
-        const header = document.querySelector('header');
-        const nav = document.querySelector('nav');
+// Wait for the document to be fully loaded before initializing
+(function() {
+    // Function to initialize everything when the DOM is ready
+    function initializeAll() {
+        // Smooth scrolling for navigation links
+        const navLinks = document.querySelectorAll('nav a');
         
-        // Create mobile nav toggle button
-        const mobileToggle = document.createElement('div');
-        mobileToggle.className = 'mobile-nav-toggle';
-        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-        header.querySelector('.container').appendChild(mobileToggle);
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                if (targetSection) {
+                    window.scrollTo({
+                        top: targetSection.offsetTop - 70, // Offset for the sticky header
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Initialize the cacao production map
+        initCacaoMap();
         
-        // Add mobile nav class to existing nav
-        nav.classList.add('desktop-nav');
+        // Animate supply chain steps on scroll
+        const steps = document.querySelectorAll('.step');
         
-        // Toggle mobile navigation
-        mobileToggle.addEventListener('click', function() {
-            nav.classList.toggle('active');
-            if (nav.classList.contains('active')) {
-                mobileToggle.innerHTML = '<i class="fas fa-times"></i>';
+        function checkScroll() {
+            steps.forEach(step => {
+                const stepTop = step.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (stepTop < windowHeight * 0.8) {
+                    step.classList.add('visible');
+                }
+            });
+        }
+        
+        // Initial check in case elements are already in view
+        checkScroll();
+        
+        // Check on scroll
+        window.addEventListener('scroll', checkScroll);
+        
+        // Back to top button
+        const backToTopBtn = document.createElement('button');
+        backToTopBtn.innerHTML = '↑';
+        backToTopBtn.classList.add('back-to-top');
+        document.body.appendChild(backToTopBtn);
+        
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        function toggleBackToTopButton() {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('show');
             } else {
-                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                backToTopBtn.classList.remove('show');
             }
-        });
+        }
         
-        // Close mobile nav when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!nav.contains(event.target) && !mobileToggle.contains(event.target) && nav.classList.contains('active')) {
-                nav.classList.remove('active');
-                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-            }
-        });
-    };
+        window.addEventListener('scroll', toggleBackToTopButton);
+        
+        // Chat Bot Functionality
+        initChatBot();
+    }
+
+    // Check if the document is already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeAll);
+    } else {
+        // Document already loaded, run initialization immediately
+        initializeAll();
+    }
+})();
+
+// Function to initialize the chat bot
+function initChatBot() {
+    // Get chat bot elements
+    const chatBotBubble = document.getElementById('chatBotBubble');
+    const chatBotPanel = document.getElementById('chatBotPanel');
+    const chatBotClose = document.getElementById('chatBotClose');
+    const chatBotInput = document.getElementById('chatBotInput');
+    const chatBotSend = document.getElementById('chatBotSend');
+    const chatBotMessages = document.getElementById('chatBotMessages');
     
-    // Only create mobile nav if screen width is below 768px
-    if (window.innerWidth < 768) {
-        createMobileNav();
+    // Check if all elements exist
+    if (!chatBotBubble || !chatBotPanel || !chatBotClose || !chatBotInput || !chatBotSend || !chatBotMessages) {
+        console.error('Chat bot elements not found. Chat functionality will not be available.');
+        return;
     }
     
-    // Re-check on window resize
-    window.addEventListener('resize', function() {
-        if (window.innerWidth < 768 && !document.querySelector('.mobile-nav-toggle')) {
-            createMobileNav();
+    // API configuration
+    const API_URL = 'https://openwebui.valuechainhackers.xyz/api/chat/completions';
+    const MODEL_ID = 'licycle-ai';
+    
+    // Chat history to maintain context
+    let chatHistory = [
+        {
+            role: 'system',
+            content: 'You are a helpful assistant that provides information about the cacao supply chain.'
+        }
+    ];
+    
+    // Toggle chat panel when bubble is clicked
+    chatBotBubble.addEventListener('click', function() {
+        chatBotPanel.classList.toggle('active');
+        if (chatBotPanel.classList.contains('active')) {
+            chatBotInput.focus();
         }
     });
     
-    // Smooth Scrolling for Navigation Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Close mobile nav if open
-            const mobileNav = document.querySelector('nav.desktop-nav');
-            const mobileToggle = document.querySelector('.mobile-nav-toggle');
-            if (mobileNav && mobileNav.classList.contains('active')) {
-                mobileNav.classList.remove('active');
-                mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
-            }
-            
-            // Scroll to target
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                const headerHeight = document.querySelector('header').offsetHeight;
-                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-                
-                // Update active nav link
-                document.querySelectorAll('nav a').forEach(link => {
-                    link.classList.remove('active');
-                });
-                this.classList.add('active');
-            }
-        });
+    // Close chat panel when close button is clicked
+    chatBotClose.addEventListener('click', function() {
+        chatBotPanel.classList.remove('active');
     });
     
-    // Update active nav link on scroll
-    window.addEventListener('scroll', function() {
-        const scrollPosition = window.scrollY;
-        const headerHeight = document.querySelector('header').offsetHeight;
+    // Send message when send button is clicked
+    chatBotSend.addEventListener('click', sendMessage);
+    
+    // Send message when Enter key is pressed in the input field
+    chatBotInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    
+    // Function to send message
+    function sendMessage() {
+        const message = chatBotInput.value.trim();
+        if (message === '') return;
         
-        document.querySelectorAll('section').forEach(section => {
-            const sectionTop = section.offsetTop - headerHeight - 100;
-            const sectionBottom = sectionTop + section.offsetHeight;
-            const sectionId = section.getAttribute('id');
-            
-            if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-                document.querySelectorAll('nav a').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === `#${sectionId}`) {
-                        link.classList.add('active');
-                    }
-                });
-            }
+        // Add user message to chat
+        addMessageToChat('user', message);
+        
+        // Add to chat history
+        chatHistory.push({
+            role: 'user',
+            content: message
         });
-    });
-    
-    // Contact Form Submission
-    const contactForm = document.getElementById('contactForm');
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const subject = document.getElementById('subject').value;
-            const message = document.getElementById('message').value;
-            
-            // In a real application, you would send this data to a server
-            console.log('Form submitted:', { name, email, subject, message });
-            
-            // Show success message
-            const formContainer = contactForm.parentElement;
-            const successMessage = document.createElement('div');
-            successMessage.className = 'success-message';
-            successMessage.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                <h3>Message Sent Successfully!</h3>
-                <p>Thank you for contacting us, ${name}. We'll get back to you shortly.</p>
-                <button class="btn btn-primary" id="resetForm">Send Another Message</button>
-            `;
-            
-            formContainer.innerHTML = '';
-            formContainer.appendChild(successMessage);
-            
-            // Reset form button
-            document.getElementById('resetForm').addEventListener('click', function() {
-                formContainer.innerHTML = '';
-                formContainer.appendChild(contactForm);
-                contactForm.reset();
-            });
-        });
+        
+        // Clear input
+        chatBotInput.value = '';
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        // Send message to API
+        sendMessageToAPI(message);
     }
     
-    // Newsletter Form Submission
-    const newsletterForm = document.getElementById('newsletterForm');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
+    // Function to add message to chat
+    function addMessageToChat(sender, content) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-bot-message', sender);
+        
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('chat-bot-message-content');
+        messageContent.textContent = content;
+        
+        messageElement.appendChild(messageContent);
+        chatBotMessages.appendChild(messageElement);
+        
+        // Scroll to bottom
+        chatBotMessages.scrollTop = chatBotMessages.scrollHeight;
+    }
+    
+    // Function to show typing indicator
+    function showTypingIndicator() {
+        const typingElement = document.createElement('div');
+        typingElement.classList.add('chat-bot-message', 'bot', 'typing-indicator');
+        
+        const typingContent = document.createElement('div');
+        typingContent.classList.add('chat-bot-typing');
+        
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('chat-bot-typing-dot');
+            typingContent.appendChild(dot);
+        }
+        
+        typingElement.appendChild(typingContent);
+        chatBotMessages.appendChild(typingElement);
+        
+        // Scroll to bottom
+        chatBotMessages.scrollTop = chatBotMessages.scrollHeight;
+        
+        return typingElement;
+    }
+    
+    // Function to remove typing indicator
+    function removeTypingIndicator() {
+        const typingIndicator = chatBotMessages.querySelector('.typing-indicator');
+        if (typingIndicator) {
+            chatBotMessages.removeChild(typingIndicator);
+        }
+    }
+    
+    // Function to send message to API
+    function sendMessageToAPI(message) {
+        try {
+            // In a real implementation, you would need to obtain an API key
+            // For demonstration purposes, we'll simulate a response
             
-            // Get email
-            const email = this.querySelector('input[type="email"]').value;
+            // Simulate API call delay
+            setTimeout(() => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Generate a response based on the message
+                let response;
+                
+                if (message.toLowerCase().includes('hello') || message.toLowerCase().includes('hi')) {
+                    response = "Hello! I'm your Cacao Supply Chain Assistant. How can I help you today?";
+                } else if (message.toLowerCase().includes('cacao') || message.toLowerCase().includes('chocolate')) {
+                    response = "Cacao is the main ingredient in chocolate production. The cacao tree (Theobroma cacao) produces pods containing beans that are processed to make chocolate. About 70% of the world's cacao is grown in West Africa.";
+                } else if (message.toLowerCase().includes('supply chain')) {
+                    response = "The cacao supply chain involves several steps: farming, harvesting, fermentation, drying, trading, processing, manufacturing, and distribution. Each step is crucial for the quality of the final chocolate product.";
+                } else if (message.toLowerCase().includes('challenge') || message.toLowerCase().includes('problem')) {
+                    response = "The cacao industry faces several challenges including farmer poverty, child labor issues, deforestation, climate change impacts, price volatility, and an aging farmer population.";
+                } else if (message.toLowerCase().includes('innovation') || message.toLowerCase().includes('solution')) {
+                    response = "Innovations in the cacao industry include sustainability initiatives, certification programs, direct trade relationships, technology adoption for transparency, research into disease-resistant varieties, and agroforestry systems.";
+                } else {
+                    response = "I'm here to help with information about the cacao supply chain. Feel free to ask about cacao farming, processing, challenges, or innovations in the industry!";
+                }
+                
+                // Add bot response to chat
+                addMessageToChat('bot', response);
+                
+                // Add to chat history
+                chatHistory.push({
+                    role: 'assistant',
+                    content: response
+                });
+                
+            }, 1500);
             
-            // In a real application, you would send this data to a server
-            console.log('Newsletter subscription:', email);
+            // In a real implementation with API key, you would make an actual API call like this:
+            /*
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer YOUR_API_KEY`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: MODEL_ID,
+                    messages: chatHistory
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add bot response to chat
+                if (data.choices && data.choices.length > 0) {
+                    const botResponse = data.choices[0].message.content;
+                    addMessageToChat('bot', botResponse);
+                    
+                    // Add to chat history
+                    chatHistory.push({
+                        role: 'assistant',
+                        content: botResponse
+                    });
+                } else {
+                    addMessageToChat('bot', 'Sorry, I encountered an error. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending message to API:', error);
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add error message to chat
+                addMessageToChat('bot', 'Sorry, I encountered an error. Please try again.');
+            });
+            */
             
-            // Show success message
-            const formContainer = newsletterForm.parentElement;
-            const originalContent = formContainer.innerHTML;
+        } catch (error) {
+            console.error('Error sending message to API:', error);
             
-            formContainer.innerHTML = `
-                <div class="success-message">
-                    <i class="fas fa-check-circle"></i>
-                    <p>Thank you for subscribing to our newsletter!</p>
+            // Remove typing indicator
+            removeTypingIndicator();
+            
+            // Add error message to chat
+            addMessageToChat('bot', 'Sorry, I encountered an error. Please try again.');
+        }
+    }
+}
+
+// Function to initialize the cacao production map
+function initCacaoMap() {
+    // Check if the map element exists
+    const mapElement = document.getElementById('cacao-map');
+    if (!mapElement) return;
+    
+    // Initialize the map centered at 0,0 with zoom level 2 (world view)
+    const map = L.map('cacao-map').setView([0, 0], 2);
+    
+    // Add the OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18
+    }).addTo(map);
+    
+    // Define cacao production locations with details
+    const locations = [
+        // Farming locations
+        {
+            name: "Ivory Coast",
+            type: "farm",
+            coordinates: [7.54, -5.55],
+            description: "The world's largest cacao producer, accounting for approximately 40% of global production. Most farms are small family operations of 2-5 hectares.",
+            production: "2.2 million metric tons annually",
+            challenges: "Deforestation, child labor concerns, and low farmer incomes"
+        },
+        {
+            name: "Ghana",
+            type: "farm",
+            coordinates: [7.95, -1.03],
+            description: "The world's second-largest cacao producer known for high-quality beans. Ghana's Cocoa Board (COCOBOD) regulates the industry.",
+            production: "800,000 metric tons annually",
+            challenges: "Aging farmer population, climate change impacts"
+        },
+        {
+            name: "Ecuador",
+            type: "farm",
+            coordinates: [-1.83, -78.18],
+            description: "Producer of fine flavor 'Nacional' cacao, known for floral aroma profiles. Ecuador is famous for its high-quality, aromatic cacao varieties.",
+            production: "325,000 metric tons annually",
+            challenges: "Disease pressure, maintaining genetic diversity"
+        },
+        {
+            name: "Indonesia",
+            type: "farm",
+            coordinates: [-0.79, 113.92],
+            description: "The third-largest cacao producer globally, primarily on the island of Sulawesi. Known for bulk cacao production.",
+            production: "600,000 metric tons annually",
+            challenges: "Pest management, quality consistency"
+        },
+        {
+            name: "Brazil",
+            type: "farm",
+            coordinates: [-14.24, -51.93],
+            description: "Once the world's largest producer, now focused on the domestic market. The Bahia region is known for its cacao farms.",
+            production: "200,000 metric tons annually",
+            challenges: "Witches' broom disease, market competition"
+        },
+        
+        // Processing locations
+        {
+            name: "Amsterdam, Netherlands",
+            type: "processing",
+            coordinates: [52.37, 4.90],
+            description: "Major cacao processing hub with large grinding facilities. The Port of Amsterdam is one of the world's largest cacao ports.",
+            capacity: "Processing over 600,000 tons annually",
+            companies: "Cargill, Olam, Barry Callebaut"
+        },
+        {
+            name: "Abidjan, Ivory Coast",
+            type: "processing",
+            coordinates: [5.36, -4.01],
+            description: "Growing processing center as Ivory Coast aims to process more cacao domestically rather than just exporting raw beans.",
+            capacity: "Processing capacity expanding to 1 million tons",
+            companies: "Cémoi, Barry Callebaut, Cargill"
+        },
+        {
+            name: "Singapore",
+            type: "processing",
+            coordinates: [1.35, 103.82],
+            description: "Strategic Asian processing hub with state-of-the-art facilities. Gateway for Asian chocolate markets.",
+            capacity: "Processing over 350,000 tons annually",
+            companies: "Olam, Cargill"
+        },
+        
+        // Manufacturing locations
+        {
+            name: "Hershey, Pennsylvania, USA",
+            type: "manufacturing",
+            coordinates: [40.29, -76.65],
+            description: "Home to The Hershey Company, one of the world's largest chocolate manufacturers. The town was built around the chocolate factory.",
+            products: "Hershey's Kisses, Reese's, Kit Kat (US)",
+            founded: "1894"
+        },
+        {
+            name: "Vevey, Switzerland",
+            type: "manufacturing",
+            coordinates: [46.46, 6.84],
+            description: "Headquarters of Nestlé, one of the world's largest food companies with significant chocolate production.",
+            products: "KitKat (global), Crunch, various premium chocolate brands",
+            founded: "1866"
+        },
+        {
+            name: "Birmingham, UK",
+            type: "manufacturing",
+            coordinates: [52.48, -1.90],
+            description: "Home to Cadbury's Bournville factory, a historic chocolate manufacturing site.",
+            products: "Dairy Milk, Creme Egg, Roses",
+            founded: "1824"
+        },
+        {
+            name: "Cologne, Germany",
+            type: "manufacturing",
+            coordinates: [50.94, 6.96],
+            description: "Location of Stollwerck chocolate factory and other German chocolate manufacturers. Germany has a strong tradition of chocolate making.",
+            products: "Various premium and mass-market chocolate products",
+            founded: "Multiple companies dating back to the 19th century"
+        },
+        
+        // Distribution centers
+        {
+            name: "Rotterdam, Netherlands",
+            type: "distribution",
+            coordinates: [51.91, 4.48],
+            description: "Europe's largest port and a major hub for cacao and chocolate distribution throughout Europe.",
+            capacity: "Handles millions of tons of cacao products annually",
+            reach: "Primary distribution point for European markets"
+        },
+        {
+            name: "Dubai, UAE",
+            type: "distribution",
+            coordinates: [25.20, 55.27],
+            description: "Strategic distribution hub connecting chocolate markets in Europe, Asia, and Africa. Growing importance in global chocolate trade.",
+            capacity: "Expanding rapidly with state-of-the-art logistics",
+            reach: "Middle East, North Africa, and parts of Asia"
+        },
+        {
+            name: "Shanghai, China",
+            type: "distribution",
+            coordinates: [31.23, 121.47],
+            description: "Key distribution center for the rapidly growing Asian chocolate market. China's chocolate consumption is increasing significantly.",
+            capacity: "Handles distribution for the world's most populous country",
+            reach: "China and East Asian markets"
+        }
+    ];
+    
+    // Create custom icons for different location types
+    const icons = {
+        farm: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        processing: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        manufacturing: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        }),
+        distribution: L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        })
+    };
+    
+    // Add markers for each location
+    locations.forEach(location => {
+        // Create popup content based on location type
+        let popupContent = `
+            <div class="map-popup">
+                <h4>${location.name}</h4>
+        `;
+        
+        // Add type badge with appropriate class
+        let typeLabel = '';
+        switch(location.type) {
+            case 'farm':
+                typeLabel = 'Farming';
+                break;
+            case 'processing':
+                typeLabel = 'Processing';
+                break;
+            case 'manufacturing':
+                typeLabel = 'Manufacturing';
+                break;
+            case 'distribution':
+                typeLabel = 'Distribution';
+                break;
+        }
+        
+        popupContent += `<span class="location-type type-${location.type}">${typeLabel}</span>`;
+        
+        // Add description
+        popupContent += `<p>${location.description}</p>`;
+        
+        // Add type-specific details
+        if (location.type === 'farm') {
+            popupContent += `
+                <p><strong>Production:</strong> ${location.production}</p>
+                <p><strong>Challenges:</strong> ${location.challenges}</p>
+            `;
+        } else if (location.type === 'processing') {
+            popupContent += `
+                <p><strong>Capacity:</strong> ${location.capacity}</p>
+                <p><strong>Companies:</strong> ${location.companies}</p>
+            `;
+        } else if (location.type === 'manufacturing') {
+            popupContent += `
+                <p><strong>Products:</strong> ${location.products}</p>
+                <p><strong>Founded:</strong> ${location.founded}</p>
+            `;
+        } else if (location.type === 'distribution') {
+            popupContent += `
+                <p><strong>Capacity:</strong> ${location.capacity}</p>
+                <p><strong>Market Reach:</strong> ${location.reach}</p>
+            `;
+        }
+        
+        popupContent += `</div>`;
+        
+        // Create marker with appropriate icon and add to map
+        L.marker(location.coordinates, {icon: icons[location.type]})
+            .addTo(map)
+            .bindPopup(popupContent);
+    });
+    
+    // Add a legend to explain the marker colors
+    const legend = L.control({position: 'bottomright'});
+    
+    legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'info legend');
+        div.style.backgroundColor = 'white';
+        div.style.padding = '10px';
+        div.style.borderRadius = '5px';
+        div.style.boxShadow = '0 1px 5px rgba(0,0,0,0.4)';
+        
+        div.innerHTML = '<h4 style="margin-top:0; margin-bottom:10px; font-size:14px;">Location Types</h4>';
+        
+        const types = [
+            {type: 'farm', label: 'Farming'},
+            {type: 'processing', label: 'Processing'},
+            {type: 'manufacturing', label: 'Manufacturing'},
+            {type: 'distribution', label: 'Distribution'}
+        ];
+        
+        types.forEach(item => {
+            const markerUrl = `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${
+                item.type === 'farm' ? 'green' : 
+                item.type === 'processing' ? 'blue' : 
+                item.type === 'manufacturing' ? 'orange' : 'violet'
+            }.png`;
+            
+            div.innerHTML += `
+                <div style="display:flex; align-items:center; margin-bottom:5px;">
+                    <img src="${markerUrl}" style="width:12px; margin-right:5px;">
+                    <span>${item.label}</span>
                 </div>
             `;
-            
-            // Reset after 3 seconds
-            setTimeout(() => {
-                formContainer.innerHTML = originalContent;
-                const newForm = document.getElementById('newsletterForm');
-                if (newForm) {
-                    newForm.querySelector('input[type="email"]').value = '';
-                    
-                    // Re-attach event listener to new form
-                    newForm.addEventListener('submit', arguments.callee);
-                }
-            }, 3000);
         });
-    }
-    
-    // Animate circular diagram on scroll
-    const animateCircularDiagram = () => {
-        const circleContainer = document.querySelector('.circle-container');
-        if (!circleContainer) return;
         
-        const circleItems = document.querySelectorAll('.circle-item');
-        const circleCenter = document.querySelector('.circle-center');
-        
-        // Check if element is in viewport
-        const isInViewport = (element) => {
-            const rect = element.getBoundingClientRect();
-            return (
-                rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.bottom >= 0
-            );
-        };
-        
-        // Add animation classes when in viewport
-        if (isInViewport(circleContainer) && !circleContainer.classList.contains('animated')) {
-            circleContainer.classList.add('animated');
-            
-            // Animate circle center
-            circleCenter.style.opacity = '0';
-            circleCenter.style.transform = 'translate(-50%, -50%) scale(0.5)';
-            
-            setTimeout(() => {
-                circleCenter.style.transition = 'all 0.6s ease-out';
-                circleCenter.style.opacity = '1';
-                circleCenter.style.transform = 'translate(-50%, -50%) scale(1)';
-            }, 300);
-            
-            // Animate circle items one by one
-            circleItems.forEach((item, index) => {
-                item.style.opacity = '0';
-                item.style.transform = 'scale(0.5)';
-                
-                setTimeout(() => {
-                    item.style.transition = 'all 0.5s ease-out';
-                    item.style.opacity = '1';
-                    item.style.transform = 'scale(1)';
-                }, 600 + (index * 200));
-            });
-        }
+        return div;
     };
     
-    // Call on scroll
-    window.addEventListener('scroll', animateCircularDiagram);
-    // Call once on page load
-    setTimeout(animateCircularDiagram, 500);
-    
-    // Add CSS for animations
-    const addAnimationStyles = () => {
-        const styleElement = document.createElement('style');
-        styleElement.textContent = `
-            @keyframes fadeInUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .stat-item, .service-card, .benefit-item {
-                opacity: 0;
-                animation: fadeInUp 0.6s ease-out forwards;
-            }
-            
-            .stat-item:nth-child(1) { animation-delay: 0.2s; }
-            .stat-item:nth-child(2) { animation-delay: 0.4s; }
-            .stat-item:nth-child(3) { animation-delay: 0.6s; }
-            
-            .service-card:nth-child(1) { animation-delay: 0.2s; }
-            .service-card:nth-child(2) { animation-delay: 0.4s; }
-            .service-card:nth-child(3) { animation-delay: 0.6s; }
-            .service-card:nth-child(4) { animation-delay: 0.8s; }
-            
-            .benefit-item:nth-child(1) { animation-delay: 0.2s; }
-            .benefit-item:nth-child(2) { animation-delay: 0.4s; }
-            .benefit-item:nth-child(3) { animation-delay: 0.6s; }
-            
-            /* Mobile nav styles */
-            @media (max-width: 768px) {
-                .mobile-nav-toggle {
-                    display: block;
-                    cursor: pointer;
-                    font-size: 1.5rem;
-                    z-index: 100;
-                }
-                
-                nav.desktop-nav {
-                    position: fixed;
-                    top: 0;
-                    right: -250px;
-                    width: 250px;
-                    height: 100vh;
-                    background-color: var(--white-color);
-                    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-                    padding: 80px 20px 20px;
-                    transition: right 0.3s ease;
-                    z-index: 99;
-                }
-                
-                nav.desktop-nav.active {
-                    right: 0;
-                }
-                
-                nav.desktop-nav ul {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-                
-                nav.desktop-nav ul li {
-                    margin: 15px 0;
-                    width: 100%;
-                }
-                
-                nav.desktop-nav ul li a {
-                    display: block;
-                    padding: 5px 0;
-                }
-            }
-            
-            /* Success message styles */
-            .success-message {
-                text-align: center;
-                padding: 30px;
-                background-color: var(--light-color);
-                border-radius: 10px;
-                animation: fadeInUp 0.5s ease-out;
-            }
-            
-            .success-message i {
-                font-size: 3rem;
-                color: var(--primary-color);
-                margin-bottom: 15px;
-            }
-        `;
-        document.head.appendChild(styleElement);
-    };
-    
-    addAnimationStyles();
-});
+    legend.addTo(map);
+}
