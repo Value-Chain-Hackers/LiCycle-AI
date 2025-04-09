@@ -1,11 +1,11 @@
 /* Base Styles */
 :root {
-    --primary-color: #5D4037; /* Dark brown */
-    --secondary-color: #8D6E63; /* Medium brown */
-    --accent-color: #D7CCC8; /* Light beige */
-    --text-color: #3E2723; /* Very dark brown */
-    --background-color: #EFEBE9; /* Off-white */
-    --highlight-color: #C8A165; /* Gold accent */
+    --primary-color: #1A5276; /* Dark blue */
+    --secondary-color: #2E86C1; /* Medium blue */
+    --accent-color: #D4E6F1; /* Light blue */
+    --text-color: #17202A; /* Very dark blue/black */
+    --background-color: #F8F9F9; /* Off-white */
+    --highlight-color: #3498DB; /* Bright blue accent */
     --white: #FFFFFF;
     --black: #212121;
 }
@@ -103,7 +103,7 @@ nav ul li a:hover::after {
 
 /* Hero Section */
 #hero {
-    background: linear-gradient(rgba(93, 64, 55, 0.8), rgba(93, 64, 55, 0.8)), url('https://source.unsplash.com/random/1600x900/?cacao') no-repeat center center/cover;
+    background: linear-gradient(rgba(26, 82, 118, 0.8), rgba(26, 82, 118, 0.8)), url('https://source.unsplash.com/random/1600x900/?business,technology') no-repeat center center/cover;
     color: var(--white);
     padding: 100px 0;
     text-align: center;

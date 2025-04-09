@@ -1,9 +1,9 @@
 # Jekyll Configuration for GitHub Pages
 
 # Site settings
-title: Cacao Supply Chain
-description: Information about the cacao supply chain from bean to bar
-baseurl: "/cacao-Supplychain" # the subpath of your site, e.g. /blog
+title: LiCycle AI
+description: Regulatory guidance for battery recycling businesses based on CSRD and CBAM legislation
+baseurl: "/LiCycle-AI" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
